@@ -1,0 +1,124 @@
+version: '3.4'
+
+volumes:
+  mongodb:
+  mongodb_config:
+    driver: local
+
+services:
+    # rabbitmq-server:
+    #     image: "rabbitmq:3-management"
+    #     ports:
+    #         - "5672:5672"
+    #         - "15672:15672"
+    #     healthcheck:
+    #         test: ["CMD", "curl", "-f", "http://localhost:15672"]
+    #         interval: 30s
+    #         timeout: 10s
+    #         retries: 5
+
+    # python-ui:
+    #     build: ./python-ui
+    #     depends_on:
+    #         - rabbitmq-server
+    #         - ocr-service
+    #     tty: true
+    #     ports:
+    #         - "3000:80"
+    #     volumes:
+    #         - './python-flask:/python-flask'
+
+    python-backend:
+        build: ./src/python-backend
+        depends_on:
+            - mongodb
+        tty: true
+        ports:
+            - "3000:80"
+        volumes:
+            - './src/python-backend:/python-service'
+
+    mongodb:
+        image: mongodb
+        build:
+            context: ./src/mongodb
+            dockerfile: Dockerfile
+        volumes:
+            - mongodb:/data/db
+            - mongodb_config:/data/configdb
+        ports:
+        - "27017:27017"
+
+    # ocr-service:
+    #     build: ./ocr-service
+    #     depends_on:
+    #         - rabbitmq-server
+    #         - lang-detection
+    #         - extract-date-number-service
+    #         - name-entity
+    #     links:
+    #         - rabbitmq-server
+    #         - lang-detection
+    #         - extract-date-number-service
+    #         - name-entity
+    #     tty: true
+    #     ports:
+    #         - "8080:8080"
+    #     volumes:
+    #         - './ocr-service:/ocr-service'
+    #     environment:
+    #         - RABBITMQ_PASS=guest
+    #         - RABBITMQ_USER=guest
+    #         - NAME_ENTITY_CALLBACK_QUEUE=name_entity_queue
+    #         - DATE_AMOUNT_CALLBACK_QUEUE=date_amount_queue
+    #         - LANG_CALLBACK_QUEUE=lang_queue
+
+    # name-entity:
+    #     build: ./name-entity
+    #     restart: on-failure
+    #     depends_on:
+    #         - rabbitmq-server
+    #     links:
+    #         - rabbitmq-server
+    #     tty: true
+    #     volumes:
+    #         - './name-entity:/name-entity'
+    #     environment:
+    #         - RABBITMQ_PASS=guest
+    #         - RABBITMQ_USER=guest
+    #         - NAME_ENTITY_CALLBACK_QUEUE=name_entity_queue
+
+    # extract-date-number-service:
+    #     build: ./extract-date-number-service
+    #     restart: on-failure
+    #     depends_on:
+    #         - rabbitmq-server
+    #     links:
+    #         - rabbitmq-server
+    #     tty: true
+    #     volumes:
+    #         - './extract-date-number-service:/extract-date-number-service'
+    #     environment:
+    #         - RABBITMQ_PASS=guest
+    #         - RABBITMQ_USER=guest
+    #         - DATE_AMOUNT_CALLBACK_QUEUE=date_amount_queue
+
+    # lang-detection:
+    #     build: ./lang-detection
+    #     restart: on-failure
+    #     depends_on:
+    #         - rabbitmq-server
+    #     links:
+    #         - rabbitmq-server
+    #     tty: true
+    #     volumes:
+    #         - './lang-detection:/lang-detection'
+    #     environment:
+    #         - RABBITMQ_PASS=guest
+    #         - RABBITMQ_USER=guest
+    #         - LANG_CALLBACK_QUEUE=lang_queue
+
+# Host volumes used to store code.
+# volumes:
+#     python-flask:
+#     name-entity:
