@@ -36,6 +36,7 @@ class Products:
 
     @staticmethod
     def update_product(name, product):
+        Products.validate_product(product)
         result = Products.collection.update_one(
             {"name": name},
             {'$set': product})
@@ -71,7 +72,7 @@ class Products:
                 "$project": {
                     "name": 1,
                     "contain_articles": 1,
-                    "inven": {
+                    "inventory": {
                         "$map": {
                             "input": {"$range": [0, { "$size": "$contain_articles"}]},
                             "as": "idx",
@@ -89,14 +90,15 @@ class Products:
                 "$project": {
                     "name": 1,
                     "contain_articles": 1,
+                    "inventory": 1,
                     "quantity_all": {
                         "$map": {
-                            "input": {"$range": [0, {"$size": "$inven"}]},
+                            "input": {"$range": [0, {"$size": "$inventory"}]},
                             "as": "idx",
                             "in": {
                                 "$divide": [
-                                    {"$arrayElemAt": ["$inven.stock","$$idx" ]},
-                                    {"$arrayElemAt": ["$inven.amount_of", "$$idx"]}
+                                    {"$arrayElemAt": ["$inventory.stock","$$idx" ]},
+                                    {"$arrayElemAt": ["$inventory.amount_of", "$$idx"]}
                                 ]
                             }
                         }
@@ -107,7 +109,10 @@ class Products:
                 "$project": {
                     "_id": 0,
                     "name": 1,
-                    "contain_articles": 1,
+                    "inventory.art_id": 1,
+                    "inventory.amount_of": 1,
+                    "inventory.name": 1,
+                    "inventory.stock": 1,
                     "quantity": {"$trunc": { "$min": "$quantity_all" }}
                 }
             }
@@ -125,11 +130,12 @@ class Products:
         if not valid_key(p, 'contain_articles', 'list'):
             raise InvalidItem("Invalid contain_articles of product")
 
-        for a in p['contain_articles']:
+        for i, a in enumerate(p['contain_articles']):
             if not valid_key(a, 'art_id', 'str', True):
                 raise InvalidItem("Invalid art_id in contain_articles of product")
 
             if not valid_key(a, 'amount_of', 'str', True) and not valid_key(a, 'amount_of', 'int'):
                 raise InvalidItem("Invalid amount_of in contain_articles of product")
 
-            a['amount_of'] = int(a['amount_of'])
+            p['contain_articles'][i]['amount_of'] = int(a['amount_of'])
+            print(p['contain_articles'][i]['amount_of'] )

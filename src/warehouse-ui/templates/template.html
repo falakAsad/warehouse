@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        .heading {
+        background-color: #555555;
+        color: #ffffff;
+        text-align: left;
+        }
+    </style>
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('.pfile').change(function() {
+                if ($(this).val())
+                    $('.file1_submit').attr('disabled',false);
+            });
+            $('.ufile').change(function() {
+                if ($(this).val())
+                    $('.file2_submit').attr('disabled',false);
+            });
+            $('.sellbtn').click(function(evt){
+                id = $(this).attr('id');
+                $.ajax({
+                    type: "GET",
+                    url: "/product_sell/" + id,
+                    dataType: "json",
+                    async: false,
+                    success: function ( doc ) {
+                            if (doc['ok'] == true)
+                                alert(doc.message)
+
+                            location.reload()
+                        }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div style="border-radius: 25px; padding:50px">
+        <h1 class="heading">&nbsp;Warehouse</h1>
+
+        <h1 class="heading">&nbsp;Products</h1>
+        <div>
+            <p>&nbsp;</p>
+            {% block content %}
+            <table id="data" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <!-- <th>Inventory</th> -->
+                    <th>Quantity</th>
+                    <th>Sell</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for product in products %}
+                    <tr >
+                    <td>{{ product.name }}</td>
+                    <!-- <td>{{ product.item }}</td> -->
+                    <td>{{ product.quantity }}</td>
+                    <td><button class="sellbtn" id="{{ product.name }}" >Sell</button></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% endblock %}
+            <p>&nbsp;</p>
+            <div style="padding-bottom:10px">
+                <form enctype="multipart/form-data" method="post" id="product_upload_form" action = "http://10.30.39.140:3001/uploader">
+                    <input name="file1" type="file" class="pfile"/>
+                    <input type="submit" value="Upload Products"  class="file1_submit" disabled/>
+                </form>
+            </div>
+        </div>
+
+        <h1 class="heading">&nbsp;Inventory</h1>
+        <div>
+            <p>&nbsp;</p>
+            {% block content2 %}
+            <table id="data" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Stock</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for inven in inventory %}
+                    <tr >
+                    <td>{{ inven.name }}</td>
+                    <td>{{ inven.stock }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% endblock %}
+            <p>&nbsp;</p>
+            <div style="padding-bottom:10px">
+                <form enctype="multipart/form-data" method="post" id="inventory_upload_form" action = "/uploader">
+                    <input name="file2" type="file"  class="ufile" />
+                    <input type="submit" value="Upload Inventory" class="file2_submit" disabled/>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
+

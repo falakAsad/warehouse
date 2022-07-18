@@ -1,12 +1,12 @@
 import json
-from flask import Flask
-from flask_pymongo import PyMongo
-from flask import request, jsonify
 import traceback
-import sys
-from products import *
+
+from flask import Flask, jsonify, request
+from flask_pymongo import PyMongo
+
 from inventory import *
-from utils import valid_key, InvalidItem, ItemExists, InsufficientInventory, ItemMissing
+from products import *
+from utils import (InsufficientInventory, InvalidItem, ItemExists, ItemMissing)
 from warehouse import *
 
 warehouse_app = Flask(__name__)
@@ -50,7 +50,7 @@ def product_upload():
             'ok': False,
             'message': err.message}), 400
     except:
-        print("Errro")
+        print("Error:")
         print(traceback.format_exc())
         return jsonify({
             'ok': True,
@@ -117,7 +117,7 @@ def product():
             'message': err.message}), 400
 
     except Exception:
-        print("Errro")
+        print("Error:")
         print(traceback.format_exc())
         return jsonify({
             'ok': True,
@@ -125,26 +125,62 @@ def product():
 
 @warehouse_app.route('/product_all', methods=['GET'])
 def product_all():
+    """
+    List all the products, along with the quanity
+    Returns:
+        JSON data
+    """
     try:
         data = Products.get_all_product()
         print(data)
         return jsonify(data), 200
     except:
-        print("Errro")
+        print("Error:")
+        print(traceback.format_exc())
+        return jsonify({
+            'ok': True,
+            'message': 'Internal Server Error'}), 500
+
+@warehouse_app.route('/product_sell/<name>', methods=['GET'])
+def product_sell(name):
+    """
+    Removes the amount of inventory required by the given product
+    Returns:
+        JSON response
+    """
+    try:
+        Warehouse.sell_product(name)
+        return jsonify({
+            'ok': True,
+            'message': 'Item sold successfully!'}), 200
+    except ItemMissing:
+        return jsonify({
+            'ok': True,
+            'message': 'Product does not exists!'}), 200
+    except InsufficientInventory:
+        return jsonify({
+            'ok': True,
+            'message': 'Insufficient Inventory!'}), 200
+    except:
+        print("Error:")
         print(traceback.format_exc())
         return jsonify({
             'ok': True,
             'message': 'Internal Server Error'}), 500
 
 ########### Inventory related API Calls
-
 @warehouse_app.route('/inventory_all', methods=['GET'])
 def inventory_all():
+    """
+    List all the inventory item
+    Returns:
+        JSON data
+    """
     try:
         data = Inventory.get_all_inventory_items()
         return jsonify(data), 200
     except:
-        print("Errro")
+        print("Error:")
         print(traceback.format_exc())
         return jsonify({
             'ok': True,
@@ -176,11 +212,11 @@ def inventory_upload():
             return jsonify({'ok': True, 'message': 'Inventory Uploaded'}), 200
         return jsonify({'ok': False, 'message': 'Invalid require method'}), 400
     except:
-        print("Errro")
+        print("Error:")
         print(traceback.format_exc())
         return jsonify({
             'ok': True,
-            'message': 'Internal Server Error'}), 500
+            'message': 'Internalxxx Server Error ' + traceback.format_exc()}), 500
 
 @warehouse_app.route('/inventory', methods=['GET', 'POST', 'DELETE', 'PUT'])
 def inventory():
@@ -237,7 +273,7 @@ def inventory():
             'message': err.message}), 400
 
     except Exception as err:
-        print("Errro")
+        print("Error:")
         print(traceback.format_exc())
         return jsonify({
             'ok': False,
@@ -280,7 +316,7 @@ def inventory_add_or_remove(art_id, stock):
         new_stock = Inventory.add_or_remove_stock(art_id, stock)
         return jsonify({
             'ok': True,
-            'message': 'Inventory item stock changed to: ' + new_stock}), 200
+            'message': 'Inventory item stock changed to: ' + str(new_stock)}), 200
 
     except ItemMissing as err:
         return jsonify({
@@ -293,36 +329,15 @@ def inventory_add_or_remove(art_id, stock):
             'message': "Not enough inventory to remove"}), 400
 
     except Exception as err:
-        print("Errro")
+        print("Error:")
         print(traceback.format_exc())
         return jsonify({
             'ok': False,
             'message': "Internal Server Error"}), 500
 
-@warehouse_app.route('/product_sell/<name>', methods=['GET'])
-def product_sell(name):
-    try:
-        Warehouse.sell_product(name)
-        return jsonify({
-            'ok': True,
-            'message': 'Item sold successfully!'}), 200
-    except ItemMissing:
-        return jsonify({
-            'ok': True,
-            'message': 'Product does not exists!'}), 200
-    except InsufficientInventory:
-        return jsonify({
-            'ok': True,
-            'message': 'Insufficient Inventory!'}), 200
-    except:
-        print("Errro")
-        print(traceback.format_exc())
-        return jsonify({
-            'ok': True,
-            'message': 'Internal Server Error'}), 500
+@warehouse_app.route('/clear_db', methods=['GET'])
+def clear_db():
+    Warehouse.clear_warehouse(db_object)
 
-def main():
+def create_app():
     warehouse_app.run(debug=True, port=80, host='0.0.0.0')
-
-if __name__ == "__main__":
-    main()

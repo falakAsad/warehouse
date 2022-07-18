@@ -14,5 +14,7 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 # Make port 80 available to the world outside this container
 EXPOSE 80
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+RUN pip install gunicorn[gevent]
+
+# CMD gunicorn app:warehouse_app -w 2 --threads 2 -b 0.0.0.0:80
+ENTRYPOINT ["./gunicorn.sh"]

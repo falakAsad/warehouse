@@ -51,24 +51,11 @@ class Inventory:
 
     @staticmethod
     def update_inventory_item(art_id, item):
+        Inventory.validate_inventory_item(item)
         Inventory.collection.update_one(
             {"art_id": art_id},
             {'$set': item})
         return True
-
-    # @staticmethod
-    # def remove_inventory(inventory_to_remove):
-    #     inventory_items = Inventory.collection.find_many(
-    #         { "name": { "$in": inventory_to_remove.Keys() } },
-    #         {'_id': False}
-    #     )
-    #     inventory_stock_map = { art['art_id'] : art['stock'] for art in inventory_items }
-    #     updated_stock_map = {}
-    #     for art_id in inventory_stock_map.Key():
-    #         if int(inventory_stock_map[art_id]) < int(inventory_to_remove[art_id]):
-    #             raise InsufficientInventory
-    #         updated_stock_map[art_id] = int(inventory_stock_map[art_id]) - int(inventory_to_remove[art_id])
-    #     return updated_stock_map
 
     @staticmethod
     def update_inventory_stock(art_id, stock):
@@ -84,7 +71,7 @@ class Inventory:
             raise ItemMissing
 
         initial_stock = data['stock']
-        data['stock'] = initial_stock + stock
+        data['stock'] = initial_stock + int(stock)
 
         if data['stock'] < 0:
             raise InsufficientInventory
